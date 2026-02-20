@@ -1,7 +1,6 @@
 """Utility functions for handling VLNV strings."""
-from dataclasses import dataclass
 
-@dataclass
+
 class VLNV:
     """
     Represents a VLNV (Vendor:Library:Name:Version) identifier.
@@ -12,10 +11,26 @@ class VLNV:
         name (str): The name part of the VLNV string.
         version (str): The version part of the VLNV string.
     """
+
+    _original: str
     vendor: str
     library: str
     name: str
     version: str
+
+    def __init__(
+        self,
+        original: str,
+        vendor: str = None,
+        library: str = None,
+        name: str = None,
+        version: str = None,
+    ):
+        self._original = original
+        self.vendor = vendor
+        self.library = library
+        self.name = name
+        self.version = version
 
     @classmethod
     def from_string(cls, vlnv: str) -> "VLNV":
@@ -29,19 +44,51 @@ class VLNV:
         Returns:
             VLNV: The parsed VLNV instance.
         """
-        parts = vlnv.split(':',3)
-        while len(parts) < 4:
-            parts.insert(0, None)
-        return cls(*parts)
+        parts = vlnv.split(":", 3)
+
+        original = vlnv
+        vendor = None
+        library = None
+        name = None
+        version = None
+
+        if len(parts) == 1:
+            name = parts[0]
+        elif len(parts) == 2:
+            name = parts[0]
+            version = parts[1]
+        elif len(parts) == 3:
+            vendor = parts[0]
+            name = parts[1]
+            version = parts[2]
+        else:
+            vendor = parts[0]
+            library = parts[1]
+            name = parts[2]
+            version = parts[3]
+
+        return cls(original, vendor, library, name, version)
 
     def to_string(self) -> str:
         """
         Returns the VLNV as a colon-separated string.
         """
-        return ':'.join(str(part) for part in [self.vendor, self.library, self.name, self.version])
+        return ":".join(
+            str(part) for part in [self.vendor, self.library, self.name, self.version]
+        )
 
     def __str__(self) -> str:
         return self.to_string()
 
     def __repr__(self) -> str:
         return self.to_string()
+
+    def __eq__(self, other: "VLNV") -> bool:
+        if not isinstance(other, VLNV):
+            return False
+        return (
+            self.vendor == other.vendor
+            and self.library == other.library
+            and self.name == other.name
+            and self.version == other.version
+        )
